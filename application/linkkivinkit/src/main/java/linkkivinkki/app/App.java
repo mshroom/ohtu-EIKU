@@ -117,10 +117,7 @@ public class App {
     }
 
     public boolean orderAndPrintAll(String order) {
-        ArrayList<Item> allItems = new ArrayList<>();
-        allItems.addAll(bookDao.findAll());
-        allItems.addAll(icDao.findAll());
-        allItems.addAll(podcastDao.findAll());
+        ArrayList<Item> allItems = this.allItems();        
 
         if (order.equals("title")) {
             Collections.sort(allItems, new ItemTitleComparator());
@@ -134,50 +131,10 @@ public class App {
 
         printDivide();
 
-        String text = "";
-
-        int serial = 1;
+        String text = this.generatePrintForList(order, allItems);
         
-        for (Item item : allItems) {
-            text += serial + ". (" + item.getClass().getSimpleName() + ") ";
-            text += " " + item.info();
-
-            serial++;
-
-            if (order.equals("date")) {
-                text += " " + item.getCreationDate().toString();
-            }
-            text +=  "\n";
-        }
-        while (true) {
-            io.print(text);
-            
-            io.print("\n" + "Enter an number to view more information about the specified item "
-                    + Color.cyanText("return") + " to return to the main menu.");
-
-            String input = io.getString();
-
-            if (input.equals("return") || input.equals("r") || input.length() == 0) {
-                return true;
-            } else {
-                try {
-                    int id = Integer.parseInt(input);
-                    int index = id - 1;
-
-                    Item itemToView = allItems.get(index);
-
-                    String type = itemToView.getClass().getSimpleName();
-
-                    boolean keepGoing = viewOne(type.toLowerCase(), itemToView.getId());
-
-                    if (!keepGoing) {
-                        return true;
-                    }
-                } catch (Exception e) {
-                    io.print(Color.redText("Invalid command." + "\n"));
-                }
-            }
-        }
+        this.printItemList(text, allItems);
+        return true;        
     }
 
     public boolean viewItems(String type) {
@@ -508,5 +465,64 @@ public class App {
 
     private void printDivide() {
         io.print("-----------------------------\n");
+    }
+    
+        private ArrayList<Item> allItems() {
+        ArrayList<Item> allItems = new ArrayList<>();
+        allItems.addAll(bookDao.findAll());
+        allItems.addAll(icDao.findAll());
+        allItems.addAll(podcastDao.findAll());
+        return allItems;
+    }
+
+    private String generatePrintForList(String order, ArrayList<Item> items) {
+        String text = "";
+
+        int serial = 1;
+        
+        for (Item item : items) {
+            text += serial + ". (" + item.getClass().getSimpleName() + ") ";
+            text += " " + item.info();
+
+            serial++;
+
+            if (order.equals("date")) {
+                text += " " + item.getCreationDate().toString();
+            }
+            text +=  "\n";
+        }
+        return text;
+    }
+
+    private void printItemList(String text, ArrayList<Item> items) {
+        while (true) {
+            io.print(text);
+            
+            io.print("\n" + "Enter an number to view more information about the specified item "
+                    + Color.cyanText("return") + " to return to the main menu.");
+
+            String input = io.getString();
+
+            if (input.equals("return") || input.equals("r") || input.length() == 0) {
+                break;
+            } else {
+                try {
+                    int id = Integer.parseInt(input);
+                    int index = id - 1;
+
+                    Item itemToView = items.get(index);
+
+                    String type = itemToView.getClass().getSimpleName();
+
+                    boolean keepGoing = viewOne(type.toLowerCase(), itemToView.getId());
+
+                    if (!keepGoing) {
+                        break;
+                    }
+                } catch (Exception e) {
+                    io.print(Color.redText("Invalid command." + "\n"));
+                }
+            }
+        }
     }
 }
